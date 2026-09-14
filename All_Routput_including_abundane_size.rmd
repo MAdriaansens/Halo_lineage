@@ -1,0 +1,139 @@
+---
+title: "Abundance"
+output: html_document
+date: "2026-09-10"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+Nanosalina_rel <- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Sandpiper_results/sandpiper_v2.1.1_g__Nanosalina_gtdb_sample_coverage.csv', sep=',')
+Nanosalina_rel$relative_abundance_Nanosalina<-Nanosalina_rel$relative_abundance
+
+Salinibacter_rel <- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Sandpiper_results/sandpiper_v2.1.1_g__Salinibacter_gtdb_sample_coverage.csv', sep=',')
+Salinibacter_rel$relative_abundance_Salinibacter<-Salinibacter_rel$relative_abundance
+
+Halonotius_rel <- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Sandpiper_results/sandpiper_v2.1.1_g__Halonotius_gtdb_sample_coverage.csv', sep=',')
+Halonotius_rel$relative_abundance_Halonotius<-Halonotius_rel$relative_abundance
+
+
+CAYYUAO1_rel <- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Sandpiper_results/sandpiper_v2.1.1_g__CAYYUA01_gtdb_sample_coverage_9sept.csv', sep=',')
+CAYYUAO1_rel$relative_abundance_CAYYUA01<-CAYYUAO1_rel$relative_abundance
+Halovenus_rel <- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Sandpiper_results/sandpiper_v2.1.1_g__Halovenus_gtdb_sample_coverage.csv', sep=',')
+Halovenus_rel$relative_abundance_Halovenus<-Halovenus_rel$relative_abundance
+
+Haloquadratum_rel <- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Sandpiper_results/sandpiper_v2.1.1_g__Haloquadratum_gtdb_sample_coverage.csv', sep=',')
+Haloquadratum_rel$relative_abundance_Haloquadratum<-Haloquadratum_rel$relative_abundance
+
+
+Halo_rel_abundance_df <- merge(CAYYUAO1_rel, Haloquadratum_rel, by = "sample")
+Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Salinibacter_rel, by = "sample")
+Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Halonotius_rel, by = "sample")
+Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Halovenus_rel, by = "sample")
+Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Nanosalina_rel, by = "sample")
+
+```
+
+
+```{r}
+Halo_rel_abundance_df$taxon_name.x[Halo_rel_abundance_df$study_title.x =="Metagenomics Cabo Rojo Salterns"] <- 'saltern metagenome'
+Halo_rel_abundance_df$taxon_name.x[Halo_rel_abundance_df$study_title.x =="Fara Fund Lake metagenome Metagenome"] <- 'salt lake metagenome'
+Halo_rel_abundance_df$taxon_name.x[Halo_rel_abundance_df$study_title.x =="Cross-kingdom metagenomic profiling of Lake Hillier reveals pigment-rich polyextremophiles and wide-ranging metabolic adaptations"] <- 'salt lake metagenome'
+
+Halo_rel_abundance_df$taxon_name.x[Halo_rel_abundance_df$study_title.x =="Tidal flats microbial mat communities from the lagoon near Shannah, Oman - Site1_salt_MV_4 metagenome"] <- 'salt lake metagenome'
+
+Halo_rel_abundance_df$taxon_name.x[Halo_rel_abundance_df$study_title.x =="metagenomics of Laguna Verde micribialites"] <- 'salt lake metagenome'
+
+Halo_rel_abundance_df$taxon_name.x[Halo_rel_abundance_df$study_title.x =="'Fara Fund Lake metagenome Metagenome"] <- 'salt lake metagenome'
+
+```
+
+
+```{r}
+Halo_rel_abundance_df_reduced <-Halo_rel_abundance_df[,c(1,4,22,43,64,85,106,127)]
+Halo_rel_abundance_df$relative_abundance_Nanonsalina
+library(tidyr)
+
+long <-Halo_rel_abundance_df_reduced %>% 
+  pivot_longer(
+    cols = 'relative_abundance_CAYYUA01': 'relative_abundance_Nanosalina',
+    names_to = "Genera",
+    values_to = "Relative_abundance"
+)
+
+All<-ggplot(long, aes(x = Genera,
+                 y = Relative_abundance, 
+                 main = "saltern metagenomes",
+                 colour = Genera)) + geom_boxplot(outlier.shape=NA) + geom_point(position = position_jitterdodge())+ labs(
+    title = "all")+
+  theme(axis.title = element_text(size = 20))+
+  theme(axis.text = element_text(size = 18))+ theme(legend.text = element_text(size = 14))+ theme(legend.title = element_text(size = 16))+theme(axis.text.x = element_text(angle = 45))
+
+
+Saltern<-ggplot(long[long$taxon_name.x == 'saltern metagenome',], aes(x = Genera,
+                 y = Relative_abundance, 
+                 main = "saltern metagenomes",
+                 colour = Genera)) + geom_boxplot(outlier.shape=NA) + geom_point(position = position_jitterdodge())+ labs(
+    title = "salterns")+
+  theme(axis.title = element_text(size = 20))+
+  theme(axis.text = element_text(size = 18))+ theme(legend.text = element_text(size = 14))+ theme(legend.title = element_text(size = 16))+theme(
+    axis.text.x = element_text(angle = 45))
+
+
+Brine<-ggplot(long[long$taxon_name.x == 'brine metagenome',], aes(x = Genera,
+                 y = Relative_abundance,
+                 main = "brine metagenome",
+                 colour = Genera)) + geom_boxplot(outlier.shape=NA) + geom_point(position = position_jitterdodge())+ labs(
+    title = "brine")+
+  theme(axis.title = element_text(size = 20))+
+  theme(axis.text = element_text(size = 18))+ theme(legend.text = element_text(size = 14))+ theme(legend.title = element_text(size = 16))+theme(
+    axis.text.x = element_text(angle = 45))
+
+
+Salt_lake<-ggplot(long[long$taxon_name.x == 'salt lake metagenome',], aes(x = Genera,
+                 y = Relative_abundance,
+                 main = "salt lake metagenome",
+                 colour = Genera)) + geom_boxplot(outlier.shape=NA) + geom_point(position = position_jitterdodge())+ labs(
+    title = "salt lake")+
+  theme(axis.title = element_text(size = 20))+
+  theme(axis.text = element_text(size = 18))+ theme(legend.text = element_text(size = 14))+ theme(legend.title = element_text(size = 16))+theme(
+    axis.text.x = element_text(angle = 45))
+
+
+Hypersaline<-ggplot(long[long$taxon_name.x == 'hypersaline lake metagenome',], aes(x = Genera,
+                 y = Relative_abundance,
+                 
+                 colour = Genera)) + geom_boxplot(outlier.shape=NA) + geom_point(position = position_jitterdodge())+ labs(
+    title = "hypersaline lakes")+
+  theme(axis.title = element_text(size = 20))+
+  theme(axis.text = element_text(size = 18))+ theme(legend.text = element_text(size = 14))+ theme(legend.title = element_text(size = 16))+theme(
+    axis.text.x = element_text(angle = 45))
+library(patchwork)
+((Hypersaline|Saltern)/(Salt_lake|Brine))
+
+```
+
+
+
+
+```{r}
+Size_genomes<- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Genome_size_comparisson_gtdb226.tsv', sep='\t')
+
+Size_genomes$taxa_of_interest[Size_genomes$class == 'Bacteroidia'] <- 'Bacteroidia'
+Size_genomes$taxa_of_interest[Size_genomes$class == 'Rhodothermia'] <- 'Rhodothermia'
+Size_genomes$taxa_of_interest[Size_genomes$family == 'Salinibacteraceae'] <- 'Salinibacteraceae'
+Size_genomes$taxa_of_interest[Size_genomes$order == 'CAILMK01'] <- 'Halicovariales'
+Size_genomes$taxa_of_interest[Size_genomes$family == 'CAYYUA01'] <- 'Halicovariaceae'
+Size_genomes$taxa_of_interest[Size_genomes$order == 'Sphingobacteriales'] <- 'Sphingobacteriales'
+
+Size_genomes$taxa_of_interest<- factor(Size_genomes$taxa_of_interest, levels = c('Sphingobacteriales', 'Bacteroidia', 'Rhodothermia', 'Salinibacteraceae', 'Halicovariales', 'Halicovariaceae'))
+
+ggplot(Size_genomes, aes(x = genome_size_mbp, fill = taxa_of_interest)) + geom_vline(xintercept =c(median(Size_genomes$genome_size_mbp[Size_genomes$order=='Sphingobacteriales']),median(Size_genomes$genome_size_mbp[Size_genomes$family=='CAYYUA01']), median(Size_genomes$genome_size_mbp[Size_genomes$family=='Salinibacteraceae'])), color=c('black', 'blue', 'red'), size=2.5)+ 
+  geom_histogram(bins = 40, color='black') + scale_fill_manual(values = c('Sphingobacteriales'='grey', 'Bacteroidia'='darkkhaki', 'Rhodothermia'='coral2', 'Salinibacteraceae'='brown1', 'Halicovariales'='deepskyblue', 'Halicovariaceae'='darkslategray1'))
+```
+
