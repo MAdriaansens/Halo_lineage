@@ -76,6 +76,7 @@ Genome_size_dict['GB_GCA_965363965.1']=['d__Bacteria;p__Bacteroidota;c__Bacteroi
 #rework code
 
 print(len(info_list))
+print(len(info_list))
 with open('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Genome_size_comparisson_gtdb226.tsv', 'w') as output:
     header = 'accession' + '\t' + 'gtdb_taxonomy' + '\t' + 'class' + '\t' + 'order'  + '\t' + 'family' + '\t' + 'genome_size_mbp' + '\n' 
     output.write(header)
@@ -83,7 +84,7 @@ with open('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Genome_
     with open('/home/mad149/bac120_metadata_r226.tsv', 'r') as meta:
        # next(meta, None)
         for line in meta:
-            
+
             accession=line.split('\t')[0]
             genome_size=line.split('\t')[16]
             gtdb_taxonomy= line.split('\t')[19]
@@ -98,22 +99,26 @@ with open('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Genome_
                 print(Family)
             if 'd__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Sphingobacteriales;' in gtdb_taxonomy:
                 if 't' == line.split('\t')[18]:
-                    Class=gtdb_taxonomy.split(';c__')[-1].split(';o')[0]
-                    Order=gtdb_taxonomy.split(';o__')[-1].split(';f')[0]
-                    Family=gtdb_taxonomy.split(';f__')[-1].split(';g')[0]
-                    Genome_size_mbp=str(int(genome_size)/1000000)
-                    Line = accession + '\t' + gtdb_taxonomy + '\t' + Class + '\t' + Order  + '\t' + Family + '\t' +  Genome_size_mbp + '\n' 
-                    output.write(Line)
-                    print(Line)
+                    if float(line.split('\t')[2]) > 90:
+                        if float(line.split('\t')[3]) < 5:
+                            Class=gtdb_taxonomy.split(';c__')[-1].split(';o')[0]
+                            Order=gtdb_taxonomy.split(';o__')[-1].split(';f')[0]
+                            Family=gtdb_taxonomy.split(';f__')[-1].split(';g')[0]
+                            Genome_size_mbp=str(int(genome_size)/1000000)
+                            Line = accession + '\t' + gtdb_taxonomy + '\t' + Class + '\t' + Order  + '\t' + Family + '\t' +  Genome_size_mbp + '\n' 
+                            output.write(Line)
+                            print(Line)
             elif 'f__Salinibacteraceae' in gtdb_taxonomy:
                 if 't' == line.split('\t')[18]:
-                    Class=gtdb_taxonomy.split(';c__')[-1].split(';o')[0]
-                    Order=gtdb_taxonomy.split(';o__')[-1].split(';f')[0]
-                    Family=gtdb_taxonomy.split(';f__')[-1].split(';g')[0]
-                    Genome_size_mbp=str(int(genome_size)/1000000)
-                    Line = accession + '\t' + gtdb_taxonomy + '\t' + Class + '\t' + Order  + '\t' + Family + '\t' +  Genome_size_mbp + '\n' 
-                    output.write(Line)
-                    print(Line)
+                    if float(line.split('\t')[2]) > 90:
+                        if float(line.split('\t')[3]) < 5:
+                            Class=gtdb_taxonomy.split(';c__')[-1].split(';o')[0]
+                            Order=gtdb_taxonomy.split(';o__')[-1].split(';f')[0]
+                            Family=gtdb_taxonomy.split(';f__')[-1].split(';g')[0]
+                            Genome_size_mbp=str(int(genome_size)/1000000)
+                            Line = accession + '\t' + gtdb_taxonomy + '\t' + Class + '\t' + Order  + '\t' + Family + '\t' +  Genome_size_mbp + '\n' 
+                            output.write(Line)
+                            print(Line)
     for key in Genome_size_dict.keys():
         accession=key
         Genome_size_mbp=Genome_size_dict[key][-1]
@@ -124,4 +129,4 @@ with open('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Genome_
         Order=gtdb_taxonomy.split(';o__')[-1].split(';f')[0]
         Family=gtdb_taxonomy.split(';f__')[-1].split(';g')[0]
         Line = accession + '\t' + gtdb_taxonomy + '\t' + Class + '\t' + Order  + '\t' + Family + '\t' +  str(Genome_size_mbp) + '\n' 
-        output.write(Line)    
+        output.write(Line)     
