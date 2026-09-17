@@ -30,14 +30,41 @@ Halovenus_rel$relative_abundance_Halovenus<-Halovenus_rel$relative_abundance
 Haloquadratum_rel <- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Sandpiper_results/sandpiper_v2.1.1_g__Haloquadratum_gtdb_sample_coverage.csv', sep=',')
 Haloquadratum_rel$relative_abundance_Haloquadratum<-Haloquadratum_rel$relative_abundance
 
-
+Halorutilus_rel <- read.delim('/home/mad149/Metagenome_grassmere/Halicovarius_salinus_genome/Sandpiper_results/sandpiper_v2.1.1_g__Halorutilus_gtdb_sample_coverage.csv', sep=',')
+Halorutilus_rel$relative_abundance_Halorutilus<-Halorutilus_rel$relative_abundance
 Halo_rel_abundance_df <- merge(CAYYUAO1_rel, Haloquadratum_rel, by = "sample")
 Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Salinibacter_rel, by = "sample")
 Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Halonotius_rel, by = "sample")
 Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Halovenus_rel, by = "sample")
 Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Nanosalina_rel, by = "sample")
+Halo_rel_abundance_df <- merge(Halo_rel_abundance_df, Halorutilus_rel, by = "sample")
 
 ```
+
+
+
+
+```{r}
+global_coordinates<- rbind(Halo_rel_abundance_df[c('sample','longitude.x', 'latitude.x')])
+global_coordinates$longitude.x<- as.numeric(gsub( ',','.',global_coordinates$longitude.x))
+global_coordinates$latitude.x<- as.numeric(gsub( ',','.',global_coordinates$latitude.x))
+
+global_coordinates <- global_coordinates %>% 
+  add_row(sample = "NZ_sample2", longitude.x=174.166, latitude.x=-41.73)
+
+#install.packages('rnaturalearth')
+library(rnaturalearth)
+library(sf)
+
+world <- rnaturalearth::ne_countries(scale = "small", returnclass = "sf")
+
+world  %>%
+  ggplot() + geom_sf() + theme_minimal()+
+  geom_point(data = global_coordinates[global_coordinates$sample != 'NZ_sample2',], aes(x=longitude.x, y=latitude.x), size=4)+ theme(legend.title=element_text(size=32), axis.title.x = element_text(size=28), axis.title.y = element_text(size=28), legend.text = element_text(size=24)) + geom_point(data = global_coordinates[global_coordinates$sample == 'NZ_sample2',], aes(x=longitude.x, y=latitude.x), size=4, color='purple')
+
+
+```
+
 
 
 ```{r}
@@ -55,13 +82,18 @@ Halo_rel_abundance_df$taxon_name.x[Halo_rel_abundance_df$study_title.x =="'Fara 
 
 
 ```{r}
-Halo_rel_abundance_df_reduced <-Halo_rel_abundance_df[,c(1,4,22,43,64,85,106,127)]
+library(ggplot2)
+library(dplyr)
+library(multcompView)
+Halo_rel_abundance_df_reduced <-Halo_rel_abundance_df[,c(1,4,22,43,64,85,106,127, 148)]
+write.table(Halo_rel_abundance_df_reduced, file = "STable3_GA_SANDPIPEROUTPUT.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+
 Halo_rel_abundance_df$relative_abundance_Nanonsalina
 library(tidyr)
 
 long <-Halo_rel_abundance_df_reduced %>% 
   pivot_longer(
-    cols = 'relative_abundance_CAYYUA01': 'relative_abundance_Nanosalina',
+    cols = 'relative_abundance_CAYYUA01': 'relative_abundance_Halorutilus',
     names_to = "Genera",
     values_to = "Relative_abundance"
 )
@@ -73,7 +105,7 @@ All<-ggplot(long, aes(x = Genera,
     title = "all")+
   theme(axis.title = element_text(size = 20))+
   theme(axis.text = element_text(size = 18))+ theme(legend.text = element_text(size = 14))+ theme(legend.title = element_text(size = 16))+theme(axis.text.x = element_text(angle = 45))
-
+All
 
 Saltern<-ggplot(long[long$taxon_name.x == 'saltern metagenome',], aes(x = Genera,
                  y = Relative_abundance, 
@@ -118,7 +150,39 @@ library(patchwork)
 
 ```
 
+```{r}
 
+long <-Halo_rel_abundance_df_reduced %>% 
+  pivot_longer(
+    cols = 'relative_abundance_CAYYUA01': 'relative_abundance_Halorutilus',
+    names_to = "Genera",
+    values_to = "Relative_abundance"
+)
+
+# 1. Fit ANOVA and run Tukey test
+anova_model <- aov(Relative_abundance ~ Genera, data = long)
+tukey_res <- TukeyHSD(anova_model)
+
+# 2. Extract letters
+cld <- multcompLetters4(anova_model, tukey_res)
+letters_df <- data.frame(Letter = cld$Genera$Letters)
+letters_df$Genera<- rownames(letters_df)
+
+# 3. Find placement height (max value per group + offset)
+placement <- long  %>% 
+  group_by(Genera) %>% 
+  summarise(Y_pos = max(Relative_abundance) + 0.5)
+
+letters_df <- left_join(letters_df, placement, by = "Genera")
+
+# 4. Draw boxplot with letters
+ggplot(long, aes(x =Genera, y = Relative_abundance, fill = Genera)) +
+  geom_boxplot(outlier.shape = NA, aes(fill = factor(Genera)))  +
+  geom_text(data = letters_df, aes(x = Genera, y = Y_pos, label = Letter,), size=10)+theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14)) + geom_jitter(alpha=0.5,aes(fill = factor(Genera))) + scale_fill_manual(values = c('relative_abundance_CAYYUA01' = 'purple', 'relative_abundance_Salinibacter' = 'brown1', 'relative_abundance_Nanosalina' = 'gray','relative_abundance_Haloquadratum' = 'green', 'relative_abundance_Halovenus' = 'gold2', 'relative_abundance_Halonotius'= 'pink', 'relative_abundance_Halorutilus' = 'darkblue')) 
+  theme(axis.title = element_text(size = 20))+
+  theme(axis.text = element_text(size = 18))+ theme(legend.text = element_text(size = 14))+ theme(legend.title = element_text(size = 16))
+```
 
 
 ```{r}
@@ -130,10 +194,15 @@ Size_genomes$taxa_of_interest[Size_genomes$family == 'Salinibacteraceae'] <- 'Sa
 Size_genomes$taxa_of_interest[Size_genomes$order == 'CAILMK01'] <- 'Halicovariales'
 Size_genomes$taxa_of_interest[Size_genomes$family == 'CAYYUA01'] <- 'Halicovariaceae'
 Size_genomes$taxa_of_interest[Size_genomes$order == 'Sphingobacteriales'] <- 'Sphingobacteriales'
+Size_genomes$taxa_of_interest[Size_genomes$accession == 'metabat2_isolate_spades_2.11.fa'] <- 'Ca Halicovarius salinus'
 
-Size_genomes$taxa_of_interest<- factor(Size_genomes$taxa_of_interest, levels = c('Sphingobacteriales', 'Bacteroidia', 'Rhodothermia', 'Salinibacteraceae', 'Halicovariales', 'Halicovariaceae'))
+
+Size_genomes$taxa_of_interest<- factor(Size_genomes$taxa_of_interest, levels = c('Sphingobacteriales', 'Bacteroidia', 'Rhodothermia', 'Salinibacteraceae', 'Halicovariales', 'Halicovariaceae', 'Ca Halicovarius salinus'))
 
 ggplot(Size_genomes, aes(x = genome_size_mbp, fill = taxa_of_interest)) + geom_vline(xintercept =c(median(Size_genomes$genome_size_mbp[Size_genomes$order=='Sphingobacteriales']),median(Size_genomes$genome_size_mbp[Size_genomes$family=='CAYYUA01']), median(Size_genomes$genome_size_mbp[Size_genomes$family=='Salinibacteraceae'])), color=c('black', 'blue', 'red'), size=2.5)+ 
-  geom_histogram(bins = 40, color='black') + scale_fill_manual(values = c('Sphingobacteriales'='grey', 'Bacteroidia'='darkkhaki', 'Rhodothermia'='coral2', 'Salinibacteraceae'='brown1', 'Halicovariales'='deepskyblue', 'Halicovariaceae'='darkslategray1'))
+  geom_histogram(bins = 40, color='black') + scale_fill_manual(values = c('Sphingobacteriales'='grey', 'Bacteroidia'='darkkhaki', 'Rhodothermia'='coral2', 'Salinibacteraceae'='brown1', 'Halicovariales'='deepskyblue', 'Halicovariaceae'='darkslategray1', 'Ca Halicovarius salinus' = 'purple'))+
+  theme(axis.title = element_text(size = 20))+
+  theme(axis.text = element_text(size = 18))+ theme(legend.text = element_text(size = 14))+ theme(legend.title = element_text(size = 16))+scale_x_reverse()
+
 ```
 
