@@ -10,4 +10,4 @@
 declare -a array=($(seq 0 16))
 
 module load SAMtools/1.21-GCC-13.3.0
-samtools coverage Step6_map_reads/Isolate_spades/${array[$SLURM_ARRAY_TASK_ID]}_Spades_isolate/${array[$SLURM_ARRAY_TASK_ID]}_vs_*/*bam -o output_file${array[$SLURM_ARRAY_TASK_ID]}_coverage.txt
+samtools coverage Step6_map_reads/Isolate_spades/${array[$SLURM_ARRAY_TASK_ID]}_Spades_isolate/${array[$SLURM_ARRAY_TASK_ID]}_vs_${array[$SLURM_ARRAY_TASK_ID]}/*bam -o output_file${array[$SLURM_ARRAY_TASK_ID]}_coverage.txt
