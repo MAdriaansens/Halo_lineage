@@ -85,7 +85,7 @@ Halo_rel_abundance_df$taxon_name.x[Halo_rel_abundance_df$study_title.x =="'Fara 
 library(ggplot2)
 library(dplyr)
 library(multcompView)
-Halo_rel_abundance_df_reduced <-Halo_rel_abundance_df[,c(1,4,22,43,64,85,106,127, 148)]
+Halo_rel_abundance_df_reduced <-Halo_rel_abundance_df[,c(1,4,18,19,22,43,64,85,106,127, 148)]
 write.table(Halo_rel_abundance_df_reduced, file = "STable3_GA_SANDPIPEROUTPUT.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
 
 Halo_rel_abundance_df$relative_abundance_Nanonsalina
